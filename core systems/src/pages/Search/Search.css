@@ -1,0 +1,254 @@
+.search {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 24px;
+  padding: 32px 24px;
+  background: var(--color-bg-soft);
+  min-height: 80vh;
+  max-width: 1400px;
+}
+
+.search__filters {
+  background: #f0f0f3;
+  border-radius: var(--radius-md);
+  padding: 24px 18px;
+  align-self: start;
+  height: fit-content;
+}
+
+.search__filters-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 20px;
+  color: var(--color-text);
+}
+
+.search__group {
+  margin-bottom: 24px;
+  border-bottom: 1px solid #d1d5db;
+  padding-bottom: 18px;
+}
+
+.search__group:last-child {
+  border-bottom: none;
+}
+
+.search__group h4 {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 12px;
+  color: var(--color-text);
+}
+
+.search__group ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.search__group ul li {
+  font-size: 13px;
+  color: #6b7280;
+  padding: 4px 0;
+  cursor: pointer;
+}
+
+.search__brand-input {
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 13px;
+  margin-bottom: 10px;
+  background: #fff;
+}
+
+.search__check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--color-text);
+  padding: 4px 0;
+  cursor: pointer;
+}
+
+.search__check input {
+  accent-color: var(--color-purple);
+}
+
+.search__check-count {
+  color: #9ca3af;
+  margin-left: auto;
+  font-size: 12px;
+}
+
+.search__color-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  display: inline-block;
+  border: 1px solid #d1d5db;
+}
+
+.search__price-list {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+}
+
+.search__price-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  padding: 4px 0;
+  cursor: pointer;
+  color: #4b5563;
+}
+
+.search__price-row:hover {
+  color: var(--color-purple);
+}
+
+.search__price-inputs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.search__price-inputs input {
+  flex: 1;
+  width: 60px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 13px;
+}
+
+.search__price-go {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: var(--color-price);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ====== Main column ====== */
+.search__main {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.search__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: transparent;
+}
+
+.search__results-count {
+  font-size: 16px;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.search__order {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--color-text);
+}
+
+.search__order select {
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 13px;
+  background: #fff;
+}
+
+.search__banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 16px 24px;
+  background: linear-gradient(90deg, #2e1065 0%, #6d28d9 100%);
+  border-radius: var(--radius-md);
+  color: #fff;
+}
+
+.search__banner-tag {
+  display: inline-block;
+  background: #fff;
+  color: var(--color-text);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 4px;
+  margin-bottom: 6px;
+}
+
+.search__banner-text h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.search__banner-price {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.search__banner-price small {
+  display: block;
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+.search__banner-price strong {
+  font-size: 28px;
+  background: #fff;
+  color: var(--color-text);
+  padding: 6px 14px;
+  border-radius: 999px;
+}
+
+.search__banner-btn {
+  background: #fff;
+  color: var(--color-text);
+  border-radius: 999px;
+  padding: 8px 20px;
+  font-weight: 600;
+  font-size: 13px;
+  transition: background 0.15s;
+}
+
+.search__banner-btn:hover {
+  background: var(--color-teal);
+}
+
+.search__list {
+  display: flex;
+  flex-direction: column;
+}
+
+.search__empty {
+  text-align: center;
+  color: var(--color-muted);
+  padding: 60px 0;
+}
+
+@media (max-width: 900px) {
+  .search {
+    grid-template-columns: 1fr;
+  }
+  .search__banner {
+    flex-direction: column;
+    text-align: center;
+  }
+}
