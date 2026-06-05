@@ -1,0 +1,20 @@
+.spinner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spinner__circle {
+  border-radius: 50%;
+  border: 3px solid rgba(10, 24, 56, 0.1);
+  border-top-color: var(--color-teal);
+  animation: spin 0.75s linear infinite;
+}
+
+.spinner--sm .spinner__circle { width: 20px; height: 20px; }
+.spinner--md .spinner__circle { width: 36px; height: 36px; }
+.spinner--lg .spinner__circle { width: 56px; height: 56px; }
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

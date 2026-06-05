@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useAppDispatch, useAppSelector } from '../../app/store/hooks';
+import { fetchTodayDeals } from '../../app/store/slices/productsSlice';
+import { ProductCardSkeleton } from '../../components/ui/Skeleton';
 import ProductCard from '../../components/ProductCard/ProductCard';
-import { getTodayDeals } from '../../services/productService';
-import type { Product } from '../../types/product';
 import './Home.css';
 
 const SLIDES = [
@@ -97,13 +98,14 @@ const FEATURES = [
 ];
 
 const Home = () => {
+  const dispatch = useAppDispatch();
+  const { todayDeals, loading } = useAppSelector((state) => state.products);
   const [slide, setSlide] = useState(0);
-  const [deals, setDeals] = useState<Product[]>([]);
   const carouselRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    getTodayDeals().then(setDeals);
-  }, []);
+    dispatch(fetchTodayDeals());
+  }, [dispatch]);
 
   useEffect(() => {
     const t = setInterval(() => setSlide((s) => (s + 1) % SLIDES.length), 7000);
@@ -172,15 +174,17 @@ const Home = () => {
           <h2 className="home__deals-title">Today's items on sale</h2>
           <div className="home__deals-row">
             <div className="home__deals-track" ref={carouselRef}>
-              {deals.map((p) => (
-                <div className="home__deals-item" key={p.id}>
-                  <ProductCard product={p} />
-                </div>
-              ))}
-              {deals.length === 0 &&
-                Array.from({ length: 4 }).map((_, i) => (
-                  <div className="home__deals-skeleton" key={i} />
-                ))}
+              {loading.todayDeals
+                ? Array.from({ length: 4 }).map((_, i) => (
+                    <div className="home__deals-item" key={i}>
+                      <ProductCardSkeleton />
+                    </div>
+                  ))
+                : todayDeals.map((p) => (
+                    <div className="home__deals-item" key={p.id}>
+                      <ProductCard product={p} />
+                    </div>
+                  ))}
             </div>
             <button
               className="home__deals-next"

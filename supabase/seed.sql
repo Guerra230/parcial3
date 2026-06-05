@@ -1,0 +1,17 @@
+-- ============================================================
+-- SEED DATA — CoreSystems
+-- Ejecutar DESPUÉS de schema.sql
+-- ============================================================
+-- Este archivo contiene todos los datos iniciales del sistema.
+-- El schema completo con seeds está en el SQL que te proveyeron.
+-- Pega el bloque de INSERTs de ese SQL aquí directamente.
+-- ============================================================
+
+-- Resumen de lo que debe contener este seed:
+-- 1. INSERT INTO public.categories          (8 categorías)
+-- 2. INSERT INTO public.category_filters    (filtros por categoría)
+-- 3. INSERT INTO public.brands              (8 marcas)
+-- 4. INSERT INTO public.products            (60+ productos)
+-- 5. INSERT INTO public.popular_searches    (12 términos)
+-- 6. INSERT INTO public.recommended_products (5 items)
+-- 7. UPDATE public.products SET brand_id    (link FK)

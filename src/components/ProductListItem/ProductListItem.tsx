@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 import type { Product } from '../../types/product';
-import { useCart } from '../../context/CartContext';
-import { useFavorites } from '../../context/FavoritesContext';
-import { formatCOP } from '../../services/formatService';
+import { useAppDispatch, useAppSelector } from '../../app/store/hooks';
+import { addItem } from '../../app/store/slices/cartSlice';
+import { toggleFavorite, selectIsFavorite } from '../../app/store/slices/favoritesSlice';
+import { formatCOP } from '../../utils/formatters';
 import './ProductListItem.css';
 
 interface Props {
@@ -23,9 +25,20 @@ const Stars = ({ value }: { value: number }) => {
 };
 
 const ProductListItem = ({ product }: Props) => {
-  const { addItem } = useCart();
-  const { isFavorite, toggleFavorite } = useFavorites();
-  const fav = isFavorite(product.id);
+  const dispatch = useAppDispatch();
+  const isFavoriteSelector = selectIsFavorite(product.id);
+  const fav = useAppSelector(isFavoriteSelector);
+
+  const handleAddToCart = () => {
+    dispatch(addItem({ product }));
+    toast.success('Agregado al carrito');
+  };
+
+  const handleToggleFav = () => {
+    dispatch(toggleFavorite(product));
+    toast.success(fav ? 'Eliminado de favoritos' : 'Agregado a favoritos');
+  };
+
   return (
     <article className="pli">
       <header className="pli__head">
@@ -69,7 +82,7 @@ const ProductListItem = ({ product }: Props) => {
           <button
             className="pli__add"
             type="button"
-            onClick={() => addItem(product)}
+            onClick={handleAddToCart}
             aria-label="Agregar al carrito"
             title="Agregar al carrito"
           >
@@ -95,7 +108,7 @@ const ProductListItem = ({ product }: Props) => {
         <button
           className={`pli__heart ${fav ? 'is-fav' : ''}`}
           type="button"
-          onClick={() => toggleFavorite(product)}
+          onClick={handleToggleFav}
           aria-pressed={fav}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill={fav ? '#ef4444' : 'none'}>

@@ -18,14 +18,19 @@ const labels: Record<string, string> = {
 const Category = () => {
   const { slug = '' } = useParams<{ slug: string }>();
   const [items, setItems] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    getProductsByCategory(slug as ProductCategory).then(setItems);
+    setLoading(true);
+    getProductsByCategory(slug as ProductCategory)
+      .then(setItems)
+      .finally(() => setLoading(false));
   }, [slug]);
 
   return (
     <ProductListing
       products={items}
+      loading={loading}
       title={labels[slug] ?? slug}
       showBanner={slug === 'smartphones'}
     />

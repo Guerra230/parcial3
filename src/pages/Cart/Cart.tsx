@@ -1,38 +1,58 @@
 import { Link } from 'react-router-dom';
-import { useCart } from '../../context/CartContext';
-import { formatCOP } from '../../services/formatService';
+import { toast } from 'react-hot-toast';
+import { useAppDispatch, useAppSelector } from '../../app/store/hooks';
+import {
+  removeItem,
+  updateQuantity,
+  clearCart,
+  selectCartItems,
+  selectCartSummary,
+} from '../../app/store/slices/cartSlice';
+import { formatCOP } from '../../utils/formatters';
+import EmptyState from '../../components/ui/EmptyState';
 import './Cart.css';
 
+const CartEmptyIcon = () => (
+  <svg width="120" height="120" viewBox="0 0 120 120" fill="none">
+    <path
+      d="M30 38h60l-7 56a8 8 0 0 1-8 7H45a8 8 0 0 1-8-7l-7-56Z"
+      stroke="#9ca3af"
+      strokeWidth="3"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M44 38v-8a16 16 0 0 1 32 0v8"
+      stroke="#9ca3af"
+      strokeWidth="3"
+      strokeLinecap="round"
+    />
+  </svg>
+);
+
 const Cart = () => {
-  const { items, summary, updateQuantity, removeItem, clear } = useCart();
+  const dispatch = useAppDispatch();
+  const items = useAppSelector(selectCartItems);
+  const summary = useAppSelector(selectCartSummary);
+
+  const handleRemove = (productId: string, name: string) => {
+    dispatch(removeItem(productId));
+    toast.success(`"${name}" eliminado del carrito`);
+  };
+
+  const handleClear = () => {
+    dispatch(clearCart());
+    toast.success('Carrito vaciado');
+  };
 
   if (items.length === 0) {
     return (
-      <div className="cart-empty">
-        <div className="cart-empty__icon">
-          <svg width="120" height="120" viewBox="0 0 120 120" fill="none">
-            <path
-              d="M30 38h60l-7 56a8 8 0 0 1-8 7H45a8 8 0 0 1-8-7l-7-56Z"
-              stroke="#9ca3af"
-              strokeWidth="3"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M44 38v-8a16 16 0 0 1 32 0v8"
-              stroke="#9ca3af"
-              strokeWidth="3"
-              strokeLinecap="round"
-            />
-          </svg>
-        </div>
-        <h1 className="cart-empty__title">Tu carrito esta vacio</h1>
-        <p className="cart-empty__msg">
-          Descubre nuestros productos y encuentra lo que buscas
-        </p>
-        <Link to="/" className="cart-empty__cta">
-          Explora productos
-        </Link>
-      </div>
+      <EmptyState
+        icon={<CartEmptyIcon />}
+        title="Tu carrito está vacío"
+        description="Descubre nuestros productos y encuentra lo que buscas"
+        actionLabel="Explorar productos"
+        actionTo="/"
+      />
     );
   }
 
@@ -48,15 +68,13 @@ const Cart = () => {
               <Link to={`/product/${it.product.id}`} className="cart__item-name">
                 {it.product.name}
               </Link>
-              <p className="cart__item-price">
-                {formatCOP(it.product.price)} COP
-              </p>
+              <p className="cart__item-price">{formatCOP(it.product.price)} COP</p>
             </div>
             <button
               className="cart__item-trash"
               type="button"
               aria-label="Eliminar"
-              onClick={() => removeItem(it.product.id)}
+              onClick={() => handleRemove(it.product.id, it.product.name)}
             >
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
                 <path
@@ -72,9 +90,9 @@ const Cart = () => {
               <button
                 type="button"
                 onClick={() =>
-                  updateQuantity(it.product.id, it.quantity - 1)
+                  dispatch(updateQuantity({ productId: it.product.id, quantity: it.quantity - 1 }))
                 }
-                aria-label="Decrease"
+                aria-label="Disminuir"
               >
                 -
               </button>
@@ -82,9 +100,9 @@ const Cart = () => {
               <button
                 type="button"
                 onClick={() =>
-                  updateQuantity(it.product.id, it.quantity + 1)
+                  dispatch(updateQuantity({ productId: it.product.id, quantity: it.quantity + 1 }))
                 }
-                aria-label="Increase"
+                aria-label="Aumentar"
               >
                 +
               </button>
@@ -92,7 +110,7 @@ const Cart = () => {
           </div>
         ))}
 
-        <button className="cart__clear" type="button" onClick={clear}>
+        <button className="cart__clear" type="button" onClick={handleClear}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
             <path
               d="M5 7h14M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M7 7l1 12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2l1-12"
@@ -113,7 +131,7 @@ const Cart = () => {
           <strong>{formatCOP(summary.subtotal)} COP</strong>
         </div>
         <div className="cart__row">
-          <span>Envio</span>
+          <span>Envío</span>
           <strong className="cart__row-free">GRATIS</strong>
         </div>
         <div className="cart__row">
@@ -127,9 +145,13 @@ const Cart = () => {
           <span>Total</span>
           <strong>{formatCOP(summary.total)} COP</strong>
         </div>
-        <p className="cart__cuotas">12 cuotas sin interes</p>
+        <p className="cart__cuotas">12 cuotas sin interés</p>
 
-        <button className="cart__buy" type="button">
+        <button
+          className="cart__buy"
+          type="button"
+          onClick={() => toast.success('¡Procesando tu compra!')}
+        >
           Comprar
         </button>
         <Link to="/" className="cart__continue">

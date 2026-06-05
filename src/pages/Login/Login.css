@@ -156,6 +156,58 @@
   color: #2563eb;
 }
 
+.login__input--error {
+  border-color: var(--color-price);
+}
+
+.login__error {
+  color: var(--color-price);
+  font-size: 13px;
+  align-self: flex-start;
+  margin-top: -6px;
+}
+
+.login__warning {
+  width: 100%;
+  max-width: 540px;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+  font-size: 14px;
+  color: #9a3412;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.login__warning a {
+  color: #ea580c;
+  font-weight: 600;
+}
+
+.login__register-link {
+  display: inline-block;
+  width: 100%;
+  max-width: 540px;
+  padding: 14px;
+  border-radius: 999px;
+  border: 1.5px solid var(--color-text);
+  text-align: center;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text);
+  transition: background 0.15s;
+}
+
+.login__register-link:hover {
+  background: var(--color-bg-soft);
+}
+
+.login__submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 @media (max-width: 768px) {
   .login {
     padding: 32px 16px;

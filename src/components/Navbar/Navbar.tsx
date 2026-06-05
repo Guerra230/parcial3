@@ -3,13 +3,21 @@ import { Link, useNavigate } from 'react-router-dom';
 import { CATEGORIES, POPULAR_SEARCHES } from '../../data/categories';
 import { getRecommended, searchProducts } from '../../services/productService';
 import type { Product } from '../../types/product';
-import { useCart } from '../../context/CartContext';
-import { useFavorites } from '../../context/FavoritesContext';
-import { formatCOP } from '../../services/formatService';
+import { useAppSelector, useAppDispatch } from '../../app/store/hooks';
+import { selectCartItemCount } from '../../app/store/slices/cartSlice';
+import { selectFavoriteCount } from '../../app/store/slices/favoritesSlice';
+import { signOut } from '../../app/store/slices/authSlice';
+import { formatCOP } from '../../utils/formatters';
+import { useDebounce } from '../../hooks/useDebounce';
 import Logo from './Logo';
 import './Navbar.css';
 
 const Navbar = () => {
+  const dispatch = useAppDispatch();
+  const itemCount = useAppSelector(selectCartItemCount);
+  const favCount = useAppSelector(selectFavoriteCount);
+  const user = useAppSelector((state) => state.auth.user);
+
   const [query, setQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
@@ -17,37 +25,28 @@ const Navbar = () => {
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
-  const { itemCount } = useCart();
-  const { count: favCount } = useFavorites();
   const searchRef = useRef<HTMLDivElement>(null);
   const navRef = useRef<HTMLDivElement>(null);
+  const debouncedQuery = useDebounce(query, 150);
 
   useEffect(() => {
     getRecommended().then(setRecommended);
   }, []);
 
   useEffect(() => {
-    if (!query) {
+    if (!debouncedQuery) {
       setSearchResults([]);
       return;
     }
-    const t = setTimeout(() => {
-      searchProducts(query).then((res) => setSearchResults(res.slice(0, 5)));
-    }, 150);
-    return () => clearTimeout(t);
-  }, [query]);
+    searchProducts(debouncedQuery).then((res) => setSearchResults(res.slice(0, 5)));
+  }, [debouncedQuery]);
 
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
-      if (
-        searchRef.current &&
-        !searchRef.current.contains(e.target as Node)
-      ) {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node))
         setSearchOpen(false);
-      }
-      if (navRef.current && !navRef.current.contains(e.target as Node)) {
+      if (navRef.current && !navRef.current.contains(e.target as Node))
         setActiveMenu(null);
-      }
     };
     document.addEventListener('mousedown', onClick);
     return () => document.removeEventListener('mousedown', onClick);
@@ -63,6 +62,11 @@ const Navbar = () => {
     setQuery(term);
     setSearchOpen(false);
     navigate(`/search?q=${encodeURIComponent(term)}`);
+  };
+
+  const handleSignOut = async () => {
+    await dispatch(signOut());
+    navigate('/');
   };
 
   const activeCategory = CATEGORIES.find((c) => c.id === activeMenu);
@@ -110,10 +114,7 @@ const Navbar = () => {
                         )}
                         {searchResults.map((p) => (
                           <li key={p.id}>
-                            <Link
-                              to={`/product/${p.id}`}
-                              onClick={() => setSearchOpen(false)}
-                            >
+                            <Link to={`/product/${p.id}`} onClick={() => setSearchOpen(false)}>
                               <img src={p.images[0]} alt="" />
                               <span>{p.name}</span>
                             </Link>
@@ -141,10 +142,7 @@ const Navbar = () => {
                     <ul className="navbar__recommended">
                       {recommended.map((p) => (
                         <li key={p.id}>
-                          <Link
-                            to={`/product/${p.id}`}
-                            onClick={() => setSearchOpen(false)}
-                          >
+                          <Link to={`/product/${p.id}`} onClick={() => setSearchOpen(false)}>
                             <img src={p.images[0]} alt="" />
                             <div className="navbar__recommended-meta">
                               <p>{p.name}</p>
@@ -176,17 +174,30 @@ const Navbar = () => {
               </svg>
               {favCount > 0 && <span className="navbar__cart-badge">{favCount}</span>}
             </Link>
-            <Link to="/login" className="navbar__icon-btn" aria-label="Account">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="8" r="4" stroke="#5eead4" strokeWidth="1.6" />
-                <path
-                  d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"
-                  stroke="#5eead4"
-                  strokeWidth="1.6"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </Link>
+
+            {user ? (
+              <button
+                className="navbar__icon-btn"
+                aria-label="Sign out"
+                type="button"
+                onClick={handleSignOut}
+                title={`Cerrar sesión (${user.email})`}
+              >
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="8" r="4" stroke="#5eead4" strokeWidth="1.6" />
+                  <path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6" stroke="#5eead4" strokeWidth="1.6" strokeLinecap="round" />
+                </svg>
+                <span className="navbar__user-dot" aria-hidden="true" />
+              </button>
+            ) : (
+              <Link to="/login" className="navbar__icon-btn" aria-label="Account">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="8" r="4" stroke="#5eead4" strokeWidth="1.6" />
+                  <path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6" stroke="#5eead4" strokeWidth="1.6" strokeLinecap="round" />
+                </svg>
+              </Link>
+            )}
+
             <Link to="/cart" className="navbar__icon-btn navbar__cart" aria-label="Cart">
               <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
                 <path
@@ -195,12 +206,7 @@ const Navbar = () => {
                   strokeWidth="1.6"
                   strokeLinejoin="round"
                 />
-                <path
-                  d="M9 7V5a3 3 0 0 1 6 0v2"
-                  stroke="#5eead4"
-                  strokeWidth="1.6"
-                  strokeLinecap="round"
-                />
+                <path d="M9 7V5a3 3 0 0 1 6 0v2" stroke="#5eead4" strokeWidth="1.6" strokeLinecap="round" />
               </svg>
               {itemCount > 0 && <span className="navbar__cart-badge">{itemCount}</span>}
             </Link>
@@ -228,18 +234,14 @@ const Navbar = () => {
             {CATEGORIES.map((cat) => (
               <li
                 key={cat.id}
-                className={`navbar__nav-item ${
-                  cat.highlight ? 'navbar__nav-item--highlight' : ''
-                } ${activeMenu === cat.id ? 'is-active' : ''}`}
+                className={`navbar__nav-item ${cat.highlight ? 'navbar__nav-item--highlight' : ''} ${
+                  activeMenu === cat.id ? 'is-active' : ''
+                }`}
                 onMouseEnter={() => cat.megaMenu && setActiveMenu(cat.id)}
                 onMouseLeave={() => setActiveMenu(null)}
               >
                 <Link
-                  to={
-                    cat.highlight
-                      ? `/search?tag=${cat.slug}`
-                      : `/category/${cat.slug}`
-                  }
+                  to={cat.highlight ? `/search?tag=${cat.slug}` : `/category/${cat.slug}`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {cat.label}
@@ -251,9 +253,7 @@ const Navbar = () => {
                       {cat.megaMenu.map((col) => (
                         <div className="navbar__mega-col" key={col.title}>
                           <h3 className="navbar__mega-title">
-                            <span className="navbar__mega-icon">
-                              {iconFor(col.icon)}
-                            </span>
+                            <span className="navbar__mega-icon">{iconFor(col.icon)}</span>
                             {col.title}
                           </h3>
                           <hr className="navbar__mega-divider" />
@@ -283,30 +283,18 @@ const Navbar = () => {
 
 const iconFor = (kind?: string) => {
   switch (kind) {
-    case 'phone':
-      return '📱';
-    case 'laptop':
-      return '💻';
-    case 'desktop':
-      return '🖥️';
-    case 'gaming':
-      return '🎮';
-    case 'tv':
-      return '📺';
-    case 'tablet':
-      return '📲';
-    case 'console':
-      return '🎬';
-    case 'controller':
-      return '🎮';
-    case 'badge':
-      return '🏅';
-    case 'watch':
-      return '⌚';
-    case 'search':
-      return '🔍';
-    default:
-      return '•';
+    case 'phone': return '📱';
+    case 'laptop': return '💻';
+    case 'desktop': return '🖥️';
+    case 'gaming': return '🎮';
+    case 'tv': return '📺';
+    case 'tablet': return '📲';
+    case 'console': return '🎬';
+    case 'controller': return '🎮';
+    case 'badge': return '🏅';
+    case 'watch': return '⌚';
+    case 'search': return '🔍';
+    default: return '•';
   }
 };
 

@@ -1,16 +1,45 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { toast } from 'react-hot-toast';
+import { loginSchema, type LoginFormData } from '../../utils/validators';
+import { useAuth } from '../../hooks/useAuth';
+import { isSupabaseConfigured } from '../../lib/supabase';
 import './Login.css';
 
 const Login = () => {
-  const [identifier, setIdentifier] = useState('');
   const navigate = useNavigate();
+  const location = useLocation();
+  const { signIn, loading, error, isAuthenticated, clearError } = useAuth();
+  const from = (location.state as { from?: Location })?.from?.pathname ?? '/';
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!identifier.trim()) return;
-    // simulación: navegar al home
-    navigate('/');
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormData>({ resolver: zodResolver(loginSchema) });
+
+  useEffect(() => {
+    if (isAuthenticated) navigate(from, { replace: true });
+  }, [isAuthenticated, navigate, from]);
+
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
+      clearError();
+    }
+  }, [error, clearError]);
+
+  const onSubmit = async (data: LoginFormData) => {
+    if (!isSupabaseConfigured) {
+      toast.error('Supabase no está configurado. Configura las variables de entorno.');
+      return;
+    }
+    const result = await signIn(data);
+    if ('payload' in result && result.payload) {
+      toast.success('¡Bienvenido!');
+    }
   };
 
   return (
@@ -28,55 +57,66 @@ const Login = () => {
               />
             </svg>
           </span>
-          <h1>Sign in / Register</h1>
+          <h1>Iniciar sesión</h1>
         </header>
 
-        <form className="login__form" onSubmit={handleSubmit}>
-          <label className="login__label">Email or Phone number</label>
+        {!isSupabaseConfigured && (
+          <div className="login__warning">
+            Modo demo — Supabase no está configurado.{' '}
+            <a href="https://supabase.com" target="_blank" rel="noopener noreferrer">
+              Configúralo aquí
+            </a>
+          </div>
+        )}
+
+        <form className="login__form" onSubmit={handleSubmit(onSubmit)} noValidate>
+          <label className="login__label" htmlFor="email">
+            Email
+          </label>
           <input
-            type="text"
-            value={identifier}
-            onChange={(e) => setIdentifier(e.target.value)}
-            className="login__input"
+            id="email"
+            type="email"
+            className={`login__input ${errors.email ? 'login__input--error' : ''}`}
+            placeholder="tu@email.com"
+            autoComplete="email"
+            {...register('email')}
           />
-          <button type="submit" className="login__submit">
-            Continue
+          {errors.email && <span className="login__error">{errors.email.message}</span>}
+
+          <label className="login__label" htmlFor="password">
+            Contraseña
+          </label>
+          <input
+            id="password"
+            type="password"
+            className={`login__input ${errors.password ? 'login__input--error' : ''}`}
+            placeholder="••••••••"
+            autoComplete="current-password"
+            {...register('password')}
+          />
+          {errors.password && <span className="login__error">{errors.password.message}</span>}
+
+          <button type="submit" className="login__submit" disabled={loading}>
+            {loading ? 'Iniciando sesión...' : 'Continuar'}
           </button>
         </form>
 
+        <Link to="/forgot-password" className="login__trouble">
+          ¿Olvidaste tu contraseña?
+        </Link>
+
         <div className="login__divider">
-          <span>Or</span>
+          <span>¿No tienes cuenta?</span>
         </div>
 
-        <div className="login__providers">
-          <button className="login__provider" type="button">
-            <span className="login__provider-icon">G</span>
-            Continue with Google
-          </button>
-          <button className="login__provider" type="button">
-            <span className="login__provider-icon login__provider-icon--fb">
-              f
-            </span>
-            Continue with Facebook
-          </button>
-          <button className="login__provider" type="button">
-            <span className="login__provider-icon login__provider-icon--apple">
-
-            </span>
-            Continue with Apple
-          </button>
-        </div>
-
-        <Link to="#" className="login__trouble">
-          Trouble to signing in?
+        <Link to="/register" className="login__register-link">
+          Crear una cuenta
         </Link>
 
         <p className="login__terms">
-          By continuing, you agree to our{' '}
-          <a href="#">Terms of Use</a> and authorize the processing of your
-          personal data in accordance with <a href="#">Privacy Policy</a>. For
-          further details on the purposes and methods of data processing, your
-          rights, and how to exercise them, visit our Privacy Policy.
+          Al continuar, aceptas nuestros{' '}
+          <a href="#">Términos de Uso</a> y autorizas el tratamiento de tus datos
+          personales conforme a nuestra <a href="#">Política de Privacidad</a>.
         </p>
       </div>
     </div>

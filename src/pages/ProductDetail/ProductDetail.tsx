@@ -1,23 +1,31 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
+import { useAppDispatch, useAppSelector } from '../../app/store/hooks';
 import {
-  getProductById,
-  getRelatedTo,
-} from '../../services/productService';
-import type { Product } from '../../types/product';
-import { useCart } from '../../context/CartContext';
-import { useFavorites } from '../../context/FavoritesContext';
-import { formatCOP } from '../../services/formatService';
+  fetchProductById,
+  fetchRelatedProducts,
+  clearCurrentProduct,
+} from '../../app/store/slices/productsSlice';
+import { addItem } from '../../app/store/slices/cartSlice';
+import {
+  toggleFavorite,
+  selectIsFavorite,
+} from '../../app/store/slices/favoritesSlice';
+import { formatCOP } from '../../utils/formatters';
+import { Skeleton } from '../../components/ui/Skeleton';
 import ProductCard from '../../components/ProductCard/ProductCard';
 import './ProductDetail.css';
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { addItem } = useCart();
-  const { isFavorite, toggleFavorite } = useFavorites();
-  const [product, setProduct] = useState<Product | null>(null);
-  const [related, setRelated] = useState<Product[]>([]);
+  const dispatch = useAppDispatch();
+
+  const { currentProduct: product, relatedProducts: related, loading } =
+    useAppSelector((state) => state.products);
+  const isFav = useAppSelector(selectIsFavorite(id ?? ''));
+
   const [activeImg, setActiveImg] = useState(0);
   const [qty, setQty] = useState(1);
   const [expanded, setExpanded] = useState(false);
@@ -27,23 +35,55 @@ const ProductDetail = () => {
     setActiveImg(0);
     setQty(1);
     setExpanded(false);
-    getProductById(id).then((p) => setProduct(p ?? null));
-    getRelatedTo(id).then(setRelated);
-  }, [id]);
+    dispatch(fetchProductById(id));
+    dispatch(fetchRelatedProducts(id));
+    return () => {
+      dispatch(clearCurrentProduct());
+    };
+  }, [id, dispatch]);
 
-  if (!product) {
+  const handleAdd = () => {
+    if (!product) return;
+    dispatch(addItem({ product, quantity: qty }));
+    toast.success('Agregado al carrito');
+  };
+
+  const handleBuy = () => {
+    if (!product) return;
+    dispatch(addItem({ product, quantity: qty }));
+    navigate('/cart');
+  };
+
+  const handleToggleFav = () => {
+    if (!product) return;
+    dispatch(toggleFavorite(product));
+    toast.success(isFav ? 'Eliminado de favoritos' : 'Agregado a favoritos');
+  };
+
+  if (loading.currentProduct) {
     return (
       <div className="pd container">
-        <p className="pd__loading">Cargando producto...</p>
+        <Skeleton height="2rem" width="60%" />
+        <div style={{ marginTop: '2rem', display: 'flex', gap: '2rem' }}>
+          <Skeleton width="400px" height="400px" borderRadius="16px" />
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <Skeleton height="2.5rem" width="50%" />
+            <Skeleton height="1rem" width="30%" />
+            <Skeleton height="3rem" width="40%" />
+          </div>
+        </div>
       </div>
     );
   }
 
-  const handleAdd = () => addItem(product, qty);
-  const handleBuy = () => {
-    addItem(product, qty);
-    navigate('/cart');
-  };
+  if (!product) {
+    return (
+      <div className="pd container">
+        <p className="pd__loading">Producto no encontrado.</p>
+        <Link to="/" className="pd__back">Volver al inicio</Link>
+      </div>
+    );
+  }
 
   return (
     <div className="pd container">
@@ -57,7 +97,7 @@ const ProductDetail = () => {
               key={idx}
               className={`pd__thumb ${activeImg === idx ? 'is-active' : ''}`}
               onClick={() => setActiveImg(idx)}
-              aria-label={`Image ${idx + 1}`}
+              aria-label={`Imagen ${idx + 1}`}
               type="button"
             >
               <img src={img} alt="" />
@@ -80,7 +120,7 @@ const ProductDetail = () => {
               <button
                 type="button"
                 onClick={() => setQty((q) => Math.max(1, q - 1))}
-                aria-label="Decrease"
+                aria-label="Disminuir"
               >
                 -
               </button>
@@ -88,7 +128,7 @@ const ProductDetail = () => {
               <button
                 type="button"
                 onClick={() => setQty((q) => Math.min(product.stock, q + 1))}
-                aria-label="Increase"
+                aria-label="Aumentar"
               >
                 +
               </button>
@@ -103,21 +143,21 @@ const ProductDetail = () => {
               Comprar
             </button>
             <button
-              className={`pd__fav ${isFavorite(product.id) ? 'is-fav' : ''}`}
+              className={`pd__fav ${isFav ? 'is-fav' : ''}`}
               type="button"
-              onClick={() => toggleFavorite(product)}
-              aria-label="Add to favorites"
-              title={isFavorite(product.id) ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+              onClick={handleToggleFav}
+              aria-label="Favoritos"
+              title={isFav ? 'Quitar de favoritos' : 'Agregar a favoritos'}
             >
               <svg
                 width="22"
                 height="22"
                 viewBox="0 0 24 24"
-                fill={isFavorite(product.id) ? '#ef4444' : 'none'}
+                fill={isFav ? '#ef4444' : 'none'}
               >
                 <path
                   d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9Z"
-                  stroke={isFavorite(product.id) ? '#ef4444' : '#0a1838'}
+                  stroke={isFav ? '#ef4444' : '#0a1838'}
                   strokeWidth="1.6"
                 />
               </svg>

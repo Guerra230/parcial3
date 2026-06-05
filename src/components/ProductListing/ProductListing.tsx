@@ -1,13 +1,16 @@
 import { useMemo, useState } from 'react';
 import ProductListItem from '../ProductListItem/ProductListItem';
 import type { Product } from '../../types/product';
-import { formatCOP } from '../../services/formatService';
+import { formatCOP } from '../../utils/formatters';
+import { ProductListSkeleton } from '../ui/Skeleton';
+import EmptyState from '../ui/EmptyState';
 import './ProductListing.css';
 
 interface Props {
   products: Product[];
   title: string;
   showBanner?: boolean;
+  loading?: boolean;
 }
 
 const COLORS = [
@@ -29,7 +32,7 @@ const PRICE_RANGES = [
 
 type Order = 'relevance' | 'price-asc' | 'price-desc';
 
-const ProductListing = ({ products, title, showBanner = false }: Props) => {
+const ProductListing = ({ products, title, showBanner = false, loading = false }: Props) => {
   const [order, setOrder] = useState<Order>('relevance');
   const [colorFilter, setColorFilter] = useState<string[]>([]);
   const [brandFilter, setBrandFilter] = useState<string[]>([]);
@@ -250,13 +253,22 @@ const ProductListing = ({ products, title, showBanner = false }: Props) => {
         )}
 
         <div className="listing__list">
-          {filtered.map((p) => (
-            <ProductListItem key={p.id} product={p} />
-          ))}
-          {filtered.length === 0 && (
-            <p className="listing__empty">
-              No se encontraron productos con esos filtros.
-            </p>
+          {loading ? (
+            <ProductListSkeleton />
+          ) : filtered.length > 0 ? (
+            filtered.map((p) => <ProductListItem key={p.id} product={p} />)
+          ) : (
+            <EmptyState
+              title="Sin resultados"
+              description="No se encontraron productos con esos filtros."
+              actionLabel="Limpiar filtros"
+              onAction={() => {
+                setBrandFilter([]);
+                setColorFilter([]);
+                setMinPrice('');
+                setMaxPrice('');
+              }}
+            />
           )}
         </div>
       </div>

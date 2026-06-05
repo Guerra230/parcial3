@@ -1,0 +1,47 @@
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+  gap: 1rem;
+}
+
+.empty-state__icon {
+  margin-bottom: 0.5rem;
+  opacity: 0.6;
+}
+
+.empty-state__title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--color-navy);
+  margin: 0;
+}
+
+.empty-state__desc {
+  font-size: 0.95rem;
+  color: #6b7280;
+  max-width: 340px;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.empty-state__cta {
+  display: inline-block;
+  margin-top: 0.5rem;
+  padding: 0.7rem 1.8rem;
+  background: var(--color-teal);
+  color: var(--color-navy);
+  font-weight: 700;
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.empty-state__cta:hover {
+  opacity: 0.85;
+}
